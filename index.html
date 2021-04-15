@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>lissajous curve</title>
+    <style type="text/css">
+      body {
+        width: 400px;
+        margin: 10px auto;
+      }
+      canvas {
+        border: 1px solid black;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
+      .canvasWidth {
+        border: 1px solid #000;
+        background-color: #eee;
+        border-radius: 5px;
+        width: 400px;
+        margin-bottom: 10px;
+      }
+      .canvasWidth p {
+        text-align: center;
+      }
+      form:nth-of-type(1) {
+        padding: 2px 0 1px 0;
+      }
+      form:nth-of-type(2) {
+        padding: 1px 0 2px 0;
+      }
+      label {
+        margin: 0 0 0 5px;
+        padding: 2px 2px 2px 0;
+      }
+      input        { width: 45px; }
+      input.small  { width: 30px; }
+      input.button { width: 60px; float: right; margin-right: 2px;}
+      input[type="color" i] { height: 18px; padding: 0; }
+    </style>
+    <script type="text/javascript">	
+    function animateCanvas(){
+      "use strict";
+      var n = Math.floor(document.getElementById('precision').value),
+        start = Math.floor(document.getElementById('start').value),
+        finish = Math.floor(document.getElementById('finish').value),
+        speed = Math.floor(1000 / document.getElementById('speed').value),
+        color = document.getElementById('color').value;
+      function loop(){
+        draw(start, n, color);
+        if (start < finish) {
+          start = start + 1;
+          window.setTimeout(loop, speed);
+        }
+      }
+      window.setTimeout(loop, speed);
+    }
+    function preDraw(){
+      "use strict";
+      var j = Math.floor(document.getElementById('zInput').value),
+        n = Math.floor(document.getElementById('precision').value),
+        color = document.getElementById('color').value;
+      draw(j, n, color);
+    }
+    function draw(j, n, color){
+      "use strict";
+      var canvas = document.getElementById('lissajous-curve');
+      if (canvas.getContext){
+        var context = canvas.getContext('2d'),
+          x = 0,
+          y = 0,
+          x0 = 200,
+          y0 = 200;
+        context.clearRect(0,0,context.canvas.width,context.canvas.height);
+        context.beginPath();
+        context.moveTo(x0, y0);
+        context.strokeStyle = color;
+        for(var i = 0; i <= 2 * Math.PI; i += Math.PI/n/j) {
+          x = (x0 - 10) * Math.sin(j * i);
+          y = (y0 - 10) * Math.sin((j + 1) * i);
+          context.lineTo(x0 + x, y0 - y);
+        }
+        context.stroke();
+        context.closePath();
+      }
+    }
+    //TODO: Below code is for setting the start and end colors
+    /**
+     * Returns a single rgb color interpolation between given rgb color based on the factor given.
+     */
+    function interpolateColor(color1, color2, factor) {
+      if (arguments.length < 3) { 
+        factor = 0.5; 
+      }
+      var result = color1.slice();
+      for (var i = 0; i < 3; i++) {
+        result[i] = Math.round(result[i] + factor * (color2[i] - color1[i]));
+      }
+      return result;
+    };
+    /**
+     * Interpolate between two colors completely, returning an array.
+     */
+    function interpolateColors(color1, color2, steps) {
+      var stepFactor = 1 / (steps - 1);
+      var interpolatedColorArray = [];
+      color1 = color1.match(/\d+/g).map(Number);
+      color2 = color2.match(/\d+/g).map(Number);
+      for(var i = 0; i < steps; i++) {
+        interpolatedColorArray.push(interpolateColor(color1, color2, stepFactor * i));
+      }
+      return interpolatedColorArray;
+    }
+    /**
+     * Takes in a hex color (#006699) and returns an rgb object {r: ###, g: ###, b:###}.
+     */
+    function hexToRgb(hex) {
+      "use strict";
+      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+    /**
+     * Takes in three RGB numbers (0 to 255) and returns a hex color (#006699).
+     */
+    function rgbToHex(r, g, b) {
+      "use strict";
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+    </script>
+  </head>
+  <body onload="preDraw();">
+    <div class="canvasWidth">
+      <form>
+        <label name="zVariable">Z:</label>
+        <input class="small" type="text" id="zInput" name="zVariable" value="4"></input>
+        <label name="precision">Precision:</label>
+        <input name="precision" id="precision" value="1000" type="text"></input>
+        <label name="color">Color:</label>
+        <!-- <input name="color" id="color" value="006699" type="text"></input> -->
+        <input name="color" id="color" value="#006699" type="color"></input>
+        <input class="button" type="button" value="Plot" onclick="preDraw()"></input>
+      </form>
+      <form>
+        <label name="start">Start:</label>
+        <input class="small" name="start" id="start" value="1" type="text"></input>
+        <label name="finish">Finish:</label>
+        <input class="small" name="finish" id="finish" value="10" type="text"></input>
+        <label name="speed">Speed:</label>
+        <input class="small" name="speed" id="speed" value="1" type="text"></input>
+        <input class="button" type="button" value="Animate" onclick="animateCanvas()"></input>
+      </form>
+    </div>
+    <canvas id="lissajous-curve" width="400px" height="400px"></canvas>
+    <div class="canvasWidth">
+      <p>
+        <a href="http://mathworld.wolfram.com/LissajousCurve.html">Lissajous curves documentation</a>
+      </p>
+    </div>
+  </body>
+</html>
